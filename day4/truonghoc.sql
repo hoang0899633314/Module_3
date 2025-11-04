@@ -669,6 +669,23 @@ VALUES
 	GROUP BY thang
 	ORDER BY thang;
     
+    -- 18. Luyện tập về LIMIT
+    -- a. Lấy danh sách học sinh trong một lớp 1A, sắp xếp theo tên, bắt đầu từ kết quả thứ 11 và lấy 5 kết quả tiếp theo.
+    SELECT ho_ten_hs
+    FROM hoc_sinh
+    WHERE ma_lop = '1A'
+    ORDER BY ho_ten_hs
+    LIMIT 10, 5;
+    -- b. Lấy thông tin giáo viên phụ trách bộ môn trong Lớp 5A, sắp xếp theo tên môn học và lấy tối đa 5 kết quả, bắt đầu từ kết quả thứ 6
+	SELECT giao_vien.ho_ten_gv, mon_hoc.ten_mh
+    FROM giao_vien
+    JOIN phu_trach_bo_mon ON giao_vien.ma_gv = phu_trach_bo_mon.ma_gvpt
+    JOIN mon_hoc ON phu_trach_bo_mon.ma_mh = mon_hoc.ma_mh
+    WHERE phu_trach_bo_mon.ma_lop = 'L0001'
+    ORDER by mon_hoc.ten_mh
+    LIMIT 5, 5;
+    
+    
     
 	
     
