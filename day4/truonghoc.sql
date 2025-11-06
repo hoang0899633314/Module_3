@@ -669,6 +669,50 @@ VALUES
 	GROUP BY thang
 	ORDER BY thang;
     
+    -- 15. Luyện tập về LEFT JOIN
+    -- a. ma_lop, ten_lop, ma_gvcn, ho_ten_gv (chủ nhiệm) của tất cả các lớp trong trường
+    SELECT lop.ma_lop, lop.ten_lop, lop.ma_gvcn, giao_vien.ho_ten_gv
+	FROM lop
+	LEFT JOIN giao_vien ON lop.ma_gvcn = giao_vien.ma_gv;
+    -- b. ma_hs, ho_ten_hs, hoc_ky, ma_mh, ten_mh, diem_thi_giua_ky, diem_thi_cuoi_ky của tất cả học sinh trong trường
+    SELECT hoc_sinh.ma_hs, hoc_sinh.ho_ten_hs, ket_qua_hoc_tap.hoc_ky, ket_qua_hoc_tap.ma_mh,
+       mon_hoc.ten_mh, ket_qua_hoc_tap.diem_thi_giua_ky, ket_qua_hoc_tap.diem_thi_cuoi_ky
+	FROM hoc_sinh
+	LEFT JOIN ket_qua_hoc_tap ON hoc_sinh.ma_hs = ket_qua_hoc_tap.ma_hs
+	LEFT JOIN mon_hoc ON ket_qua_hoc_tap.ma_mh = mon_hoc.ma_mh;
+    -- c. ma_hs, ho_ten_hs, ma_lop, ten_lop, ma_gvcn, ho_ten_gv (Chủ nhiệm) của tất cả học sinh trong trường. (Chú ý những trường hợp: học sinh chưa được phân lớp và lớp chưa được phân GVCN)
+    SELECT hoc_sinh.ma_hs, hoc_sinh.ho_ten_hs, lop.ma_lop, lop.ten_lop, lop.ma_gvcn, giao_vien.ho_ten_gv
+	FROM hoc_sinh
+	LEFT JOIN lop ON hoc_sinh.ma_lop = lop.ma_lop
+	LEFT JOIN giao_vien ON lop.ma_gvcn = giao_vien.ma_gv;
+    -- d. ma_gv, ho_ten_gv, ma_lop, ten_lop, ma_mh, hoc_ky, ten_mh của tất cả giáo viên trong trường
+    SELECT giao_vien.ma_gv, giao_vien.ho_ten_gv, phu_trach_bo_mon.ma_lop, lop.ten_lop,
+       phu_trach_bo_mon.ma_mh, phu_trach_bo_mon.hoc_ky, mon_hoc.ten_mh
+	FROM giao_vien
+	LEFT JOIN phu_trach_bo_mon ON giao_vien.ma_gv = phu_trach_bo_mon.ma_gv
+	LEFT JOIN mon_hoc ON phu_trach_bo_mon.ma_mh = mon_hoc.ma_mh
+	LEFT JOIN lop ON phu_trach_bo_mon.ma_lop = lop.ma_lop;
+    
+    -- 17. Luyện tập về FULL JOIN
+    -- a. ma_hs, ho_ten_hs, ma_lop, ten_lop của tất cả học sinh và tất cả các lớp trong trường. (Gợi ý: lớp chưa có học sinh và học sinh chưa được phân lớp đều phải được trả về kết quả)
+	SELECT hoc_sinh.ma_hs, hoc_sinh.ho_ten_hs, hoc_sinh.ma_lop, lop.ten_lop
+	FROM hoc_sinh
+	LEFT JOIN lop ON hoc_sinh.ma_lop = lop.ma_lop
+	UNION
+	SELECT hoc_sinh.ma_hs, hoc_sinh.ho_ten_hs, lop.ma_lop, lop.ten_lop
+	FROM hoc_sinh
+	RIGHT JOIN lop ON hoc_sinh.ma_lop = lop.ma_lop;
+    -- b. ma_mh, ten_mh, ma_gv (phụ trách), ho_ten_gv (phụ trách) của tất cả những môn học và tất cả giáo viên trong trường. Kết quả trả về cần loại bỏ bớt những dòng trùng lặp (những dòng nào trùng nhau thì chỉ hiển thị kết quả 1 lần)
+	SELECT mon_hoc.ma_mh, mon_hoc.ten_mh, phu_trach_bo_mon.ma_gvpt, giao_vien.ho_ten_gv
+	FROM mon_hoc
+	LEFT JOIN phu_trach_bo_mon ON mon_hoc.ma_mh = phu_trach_bo_mon.ma_mh
+	LEFT JOIN giao_vien ON phu_trach_bo_mon.ma_gvpt = giao_vien.ma_gv
+	UNION
+	SELECT mon_hoc.ma_mh, mon_hoc.ten_mh, phu_trach_bo_mon.ma_gvpt, giao_vien.ho_ten_gv
+	FROM mon_hoc
+	RIGHT JOIN phu_trach_bo_mon ON mon_hoc.ma_mh = phu_trach_bo_mon.ma_mh
+	RIGHT JOIN giao_vien ON phu_trach_bo_mon.ma_gvpt = giao_vien.ma_gv;
+    
     -- 18. Luyện tập về LIMIT
     -- a. Lấy danh sách học sinh trong một lớp 1A, sắp xếp theo tên, bắt đầu từ kết quả thứ 11 và lấy 5 kết quả tiếp theo.
     SELECT ho_ten_hs
@@ -685,6 +729,39 @@ VALUES
     ORDER by mon_hoc.ten_mh
     LIMIT 5, 5;
     
+    -- 19. Luyện tập về EXISTS và IN
+    -- a. Lấy danh sách các học sinh có kết quả thi môn Toán học trong học kỳ 1
+	SELECT ho_ten_hs
+	FROM hoc_sinh
+	WHERE EXISTS (
+		SELECT 1
+		FROM ket_qua_hoc_tap
+		WHERE hoc_sinh.ma_hs = ket_qua_hoc_tap.ma_hs
+		  AND ket_qua_hoc_tap.ma_mh = 'MH001'
+		  AND ket_qua_hoc_tap.hoc_ky = 'Học kỳ 1'
+		);
+    -- b. Lấy danh sách các giáo viên chủ nhiệm có ít nhất một lớp học
+	SELECT ho_ten_gv
+	FROM giao_vien
+	WHERE EXISTS (
+		SELECT 1
+		FROM lop
+		WHERE giao_vien.ma_gv = lop.ma_gvcn
+	);
+    -- c. Lấy thông tin các học sinh thuộc lớp 1A hoặc lớp 1B
+	SELECT ho_ten_hs
+	FROM hoc_sinh
+	WHERE ma_lop IN ('L0001', 'L0003');
+    -- d. Lấy thông tin các học sinh có điểm thi môn Toán học trong học kỳ 1 nằm trong danh sách (8.0, 8.5, 9.0)
+	SELECT ho_ten_hs
+	FROM hoc_sinh
+	WHERE ma_hs IN (
+		SELECT ma_hs
+		FROM ket_qua_hoc_tap
+		WHERE ma_mh = 'MH001'
+		  AND hoc_ky = 'Học kỳ 1'
+		  AND diem_thi_cuoi_ky IN (8.0, 8.5, 9.0)
+	);
     
     
 	
